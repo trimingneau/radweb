@@ -3,11 +3,42 @@ import { Entity, SQLConnectionProvider, SQLCommand, Column, SQLQueryResult, Date
 import { ActualSQLServerDataProvider } from "./SQLDatabaseShared";
 
 export class WebSqlDataProvider implements DataProviderFactory, RowsOfDataForTesting {
-    rows: {
-        [tableName: string]: any;
-    };
     /** @internal */
     db: Database;
+
+    getRows(tableName: string): Promise<any[]> {
+        return new Promise<any[]>((res) => {
+            let r = [];
+            this.db.readTransaction(
+                t => {
+                    t.executeSql("select * from " + tableName, null,
+                        (t1, rs) => {
+                            for (let index = 0; index < rs.rows.length; index++) {
+                                r.push(rs.rows[index]);
+                            }
+                            res(r);
+                        })
+                }
+            )
+        });
+    }
+
+    setRows(tableName: string, rows: any[]) {
+        this.db.transaction(t => {
+            t.executeSql("delete from " + tableName);
+            rows.forEach(row => {
+                let columnNames = [];
+                let values = [];
+                for (const key in row) {
+                    if (row.hasOwnProperty(key)) {
+                        columnNames.push(key);
+                        values.push(row[key]);
+                    }
+                }
+                t.executeSql("insert into " + tableName + "(" + columnNames.join(",") + ")" + " values (" + values.join(",") + ")");
+            });
+        })
+    }
 
     constructor(private databaseName: string) {
         this.db = window.openDatabase(databaseName, '1.0', databaseName, 2 * 1024 * 1024);
@@ -76,7 +107,7 @@ class WebSqlBridgeToSQLCommand implements SQLCommand {
         return new Promise((resolve, reject) =>
             this.source.transaction(t => {
                 let s = sql;
-                let v :any[] = [];
+                let v: any[] = [];
                 var m = s.match(/~\d+~/g);
                 if (m != null)
                     m.forEach(mr => {

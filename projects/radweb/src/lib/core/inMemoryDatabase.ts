@@ -12,6 +12,12 @@ import { isFunction, makeTitle } from './common';
 
 
 export class InMemoryDataProvider implements DataProviderFactory, RowsOfDataForTesting {
+  getRows(key: string): any[] {
+    return this.rows[key];
+  }
+  setRows(key: string, rows: any[]) {
+    this.rows[key] = rows;
+  }
   rows: any = {};
   public provideFor<T extends Entity<any>>(name: string, factory: () => T): DataProvider {
     if (!this.rows[name])
@@ -19,6 +25,7 @@ export class InMemoryDataProvider implements DataProviderFactory, RowsOfDataForT
     return new ActualInMemoryDataProvider(factory, this.rows[name]);
   }
   toString() { return "InMemoryDataProvider" }
+
 }
 
 

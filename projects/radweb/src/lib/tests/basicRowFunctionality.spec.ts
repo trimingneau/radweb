@@ -965,11 +965,10 @@ describe("column validation", () => {
 });
 describe("compund id", () => {
   const ctx = new Context();
-  itAsync("start", async () => {
+  itWithDataProvider("start", async (dp, data) => {
     let c = ctx.create(CompoundIdEntity);
-    let mem = new InMemoryDataProvider();
-    mem.rows[c.__getName()] = [{ a: 1, b: 11, c: 111 }, { a: 2, b: 22, c: 222 }];
-    c.setSource(mem);
+    data.setRows(c.__getName(), [{ a: 1, b: 11, c: 111 }, { a: 2, b: 22, c: 222 }]);
+    c.setSource(dp);
 
     var r = await c.source.find();
     expect(r.length).toBe(2);
@@ -986,11 +985,10 @@ describe("compund id", () => {
     c.id.isEqualTo('1,11').__applyToConsumer(new FilterConsumnerBridgeToUrlBuilder(u));
     expect(u.url).toBe('?a=1&b=11');
   });
-  itAsync("update", async () => {
+  itWithDataProvider("update", async (dp, data) => {
     let c = ctx.create(CompoundIdEntity);
-    let mem = new InMemoryDataProvider();
-    mem.rows[c.__getName()] = [{ a: 1, b: 11, c: 111 }, { a: 2, b: 22, c: 222 }];
-    c.setSource(mem);
+    data.setRows(c.__getName(), [{ a: 1, b: 11, c: 111 }, { a: 2, b: 22, c: 222 }]);
+    c.setSource(dp);
 
     var r = await c.source.find();
     expect(r[0].c.value).toBe(111);
@@ -1001,48 +999,45 @@ describe("compund id", () => {
     expect(r[0].c.value).toBe(55);
 
 
-    expect(mem.rows[c.__getName()][0].c).toBe(55);
-    expect(mem.rows[c.__getName()][0].id).toBe(undefined);
+    expect((await data.getRows(c.__getName()))[0].c).toBe(55);
+    expect((await data.getRows(c.__getName()))[0].id).toBe(undefined);
     expect(r[0].id.value).toBe('1,11');
   });
-  itAsync("update2", async () => {
+  itWithDataProvider("update2", async (dp, data) => {
     let c = ctx.create(CompoundIdEntity);
-    let mem = new InMemoryDataProvider();
-    mem.rows[c.__getName()] = [{ a: 1, b: 11, c: 111 }, { a: 2, b: 22, c: 222 }];
-    c.setSource(mem);
+    data.setRows(c.__getName(), [{ a: 1, b: 11, c: 111 }, { a: 2, b: 22, c: 222 }]);
+    c.setSource(dp);
 
     var r = await c.source.find();
     r[0].b.value = 55;
     let saved = await r[0].save();
 
 
-    expect(mem.rows[c.__getName()][0].b).toBe(55);
-    expect(mem.rows[c.__getName()][0].id).toBe(undefined);
+    expect((await data.getRows(c.__getName()))[0].b).toBe(55);
+    expect((await data.getRows(c.__getName()))[0].id).toBe(undefined);
     expect(r[0].id.value).toBe('1,55');
   });
-  itAsync("insert", async () => {
+  itWithDataProvider("insert", async (dp, data) => {
     let c = ctx.create(CompoundIdEntity);
-    let mem = new InMemoryDataProvider();
-    mem.rows[c.__getName()] = [{ a: 1, b: 11, c: 111 }, { a: 2, b: 22, c: 222 }];
-    c.setSource(mem);
+    data.setRows(c.__getName(), [{ a: 1, b: 11, c: 111 }, { a: 2, b: 22, c: 222 }]);
+    c.setSource(dp);
 
     c.a.value = 3;
     c.b.value = 33;
     c.c.value = 3333;
     await c.save();
-    expect(mem.rows[c.__getName()][2].b).toBe(33);
-    expect(mem.rows[c.__getName()][2].id).toBe(undefined);
+    expect((await data.getRows(c.__getName()))[2].b).toBe(33);
+    expect((await data.getRows(c.__getName()))[2].id).toBe(undefined);
     expect(c.id.value).toBe('3,33');
   });
-  itAsync("delete", async () => {
+  itWithDataProvider("delete", async (dp, data) => {
     let c = ctx.create(CompoundIdEntity);
-    let mem = new InMemoryDataProvider();
-    mem.rows[c.__getName()] = [{ a: 1, b: 11, c: 111 }, { a: 2, b: 22, c: 222 }];
-    c.setSource(mem);
+    data.setRows(c.__getName(), [{ a: 1, b: 11, c: 111 }, { a: 2, b: 22, c: 222 }]);
+    c.setSource(dp);
     let r = await c.source.find();
     await r[1].delete();
-    expect(mem.rows[c.__getName()].length).toBe(1);
-    expect(mem.rows[c.__getName()][0].a).toBe(1);
+    expect((await data.getRows(c.__getName())).length).toBe(1);
+    expect((await data.getRows(c.__getName()))[0].a).toBe(1);
   });
 
 });

@@ -40,7 +40,8 @@ export interface DataProviderFactory {
 }
 
 export interface RowsOfDataForTesting {
-  rows: any;
+  getRows(key: string): any[] | Promise<Array<any>>;
+  setRows(key: string, rows: any[]);
 }
 export interface SupportsTransaction extends DataProviderFactory {
   doInTransaction(what: (dp: DataProviderFactory) => Promise<void>): Promise<void>;
